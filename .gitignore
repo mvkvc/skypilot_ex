@@ -1,6 +1,7 @@
 .elixir_ls
 .history
 .vscode
+.venv
 
 data/**/*
 !data/.keep

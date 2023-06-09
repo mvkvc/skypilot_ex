@@ -1,0 +1,26 @@
+name: spam
+
+resources:
+  cloud: lambda
+  accelerators: A10:1
+
+file_mounts:
+  /inputs: ./data/combined
+  /outputs:
+    name: mvkvc-sky-spam-model
+    store: gcs
+    persistent: True
+    mode: MOUNT
+
+setup: |
+  sudo docker build -t mvkvc/skypilot_ex:v0 .
+
+run: |
+  docker run --rm \
+    --gpus all \
+    --volume="/inputs:/inputs:ro" \
+    --volume="/outputs:/outputs:rw" \
+    mvkvc/skypilot_ex:v0 \
+    --train /inputs/train.csv \
+    --test /inputs/test.csv \
+    --output /outputs/model

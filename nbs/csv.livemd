@@ -1,0 +1,101 @@
+# csv
+
+```elixir
+Mix.install([
+  {:explorer, "~> 0.5.0"}
+])
+```
+
+## Section
+
+```elixir
+alias Explorer.DataFrame, as: DF
+alias Explorer.Series
+```
+
+```elixir
+path_base = "data/archive"
+name1 = "completeSpamAssassin"
+name2 = "enronSpamSubset"
+name3 = "lingSpam"
+```
+
+```elixir
+df1 = DF.from_csv!(path_base <> "/" <> name1 <> ".csv")
+df1 = DF.select(df1, ["Body", "Label"])
+```
+
+```elixir
+df1["Label"] |> Series.to_enum() |> Enum.frequencies()
+```
+
+```elixir
+df2 = DF.from_csv!(path_base <> "/" <> name2 <> ".csv")
+df2 = DF.select(df2, ["Body", "Label"])
+```
+
+```elixir
+df2["Label"] |> Series.to_enum() |> Enum.frequencies()
+```
+
+```elixir
+df3 = DF.from_csv!(path_base <> "/" <> name3 <> ".csv")
+df3 = DF.select(df3, ["Body", "Label"])
+```
+
+```elixir
+df3["Label"] |> Series.to_enum() |> Enum.frequencies()
+```
+
+```elixir
+DF.names(df1)
+```
+
+```elixir
+DF.names(df2)
+```
+
+```elixir
+DF.names(df3)
+```
+
+```elixir
+df = DF.concat_rows([df1, df2, df3])
+df = DF.shuffle(df)
+```
+
+```elixir
+df["Label"] |> Series.to_enum() |> Enum.frequencies()
+```
+
+```elixir
+n_rows = DF.n_rows(df)
+```
+
+```elixir
+perc_test = 0.3
+test_rows = round(n_rows * perc_test)
+```
+
+```elixir
+df_train = DF.slice(df, 0..test_rows)
+```
+
+```elixir
+df_test = DF.slice(df, (test_rows + 1)..-1)
+```
+
+```elixir
+path_out = "data/combined"
+if File.exists?(path_out) do
+  File.mkdir!(path_out)
+end
+```
+
+```elixir
+DF.to_csv!(df_train, path_out <> "/train.csv")
+```
+
+```elixir
+DF.to_csv!(df_test, path_out <> "/test.csv")
+```

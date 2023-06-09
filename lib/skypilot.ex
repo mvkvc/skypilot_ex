@@ -1,2 +1,0 @@
-defmodule Skypilot do
-end
