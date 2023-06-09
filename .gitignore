@@ -2,6 +2,7 @@
 .history
 .vscode
 .venv
+.env
 
 /*/data/**/*
 !/*/data/.keep

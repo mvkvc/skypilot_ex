@@ -1,0 +1,37 @@
+name: ai_images
+
+workdir: ./02_ai_images
+
+resources:
+  cloud: gcp
+  region: us-east4
+  zone: us-east4-c
+  instance_type: n1-standard-8
+  disk_size: 100
+  accelerators: T4:1
+
+file_mounts:
+  /inputs:
+    name: mvkvc-sky-ai-images-data
+    source: ./02_spam/data/combined
+    store: gcp
+    persistent: True
+    mode: MOUNT
+  /outputs:
+    name: mvkvc-sky-ai-images-model
+    store: gcs
+    persistent: True
+    mode: MOUNT
+
+setup: |
+  docker build -t mvkvc/skypilot_ex:ai_images .
+
+run: |
+  docker run --rm \
+    --gpus all \
+    --volume="/inputs:/inputs:ro" \
+    --volume="/outputs:/outputs:rw" \
+    mvkvc/skypilot_ex:ai_images \
+    --train /inputs/train \
+    --test /inputs/test \
+    --output /outputs/model

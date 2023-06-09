@@ -1,0 +1,19 @@
+name: build
+
+workdir: .
+
+resources:
+  cloud: gcp
+  region: us-east4
+  zone: us-east4-c
+  instance_type: n1-standard-8
+  disk_size: 100
+  accelerators: T4:1
+
+setup: |
+  echo $DOCKER_TOKEN | docker login --username mvkvc --password-stdin
+  docker build -t $DOCKER_USER/skypilot_ex:base .
+  docker push $DOCKER_USER/skypilot_ex:base
+
+run: |
+  docker images

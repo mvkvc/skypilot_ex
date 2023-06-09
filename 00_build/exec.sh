@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# To be copied to Docker image
+
 # Ensure script path is given
 if [ -z "$1" ]; then
     echo "No script path provided"

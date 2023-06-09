@@ -42,8 +42,8 @@ RUN elixir --version
 
 RUN mix local.hex --force
 RUN mix local.rebar --force
+RUN mix archive.install hex livebook 0.9.2 --force
 
-ADD ./run.sh ./run.sh
+ADD ./sh/run.sh ./run.sh
 RUN chmod +x ./run.sh
-RUN cat ./run.sh
 ENTRYPOINT [ "/root/run.sh" ]
