@@ -3,8 +3,8 @@
 .vscode
 .venv
 
-data/**/*
-!data/.keep
+/*/data/**/*
+!/*/data/.keep
 
 # The directory Mix will write compiled artifacts to.
 /_build/

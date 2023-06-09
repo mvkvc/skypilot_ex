@@ -1,10 +1,15 @@
 name: spam
 
 resources:
-  cloud: lambda
-  accelerators: A10:1
+  cloud: gcp
+  region: us-east4
+  zone: us-east4-c
+  instance_type: n1-standard-8
+  disk_size: 100
+  accelerators: T4:1
 
 file_mounts:
+  /spam: .
   /inputs: ./data/combined
   /outputs:
     name: mvkvc-sky-spam-model
@@ -13,7 +18,7 @@ file_mounts:
     mode: MOUNT
 
 setup: |
-  sudo docker build -t mvkvc/skypilot_ex:v0 .
+  docker build -t mvkvc/skypilot_ex:v0 /spam
 
 run: |
   docker run --rm \
