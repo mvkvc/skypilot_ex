@@ -19,12 +19,12 @@ IO.inspect(path_train, label: "path_train")
 IO.inspect(path_test, label: "path_test")
 IO.inspect(path_output, label: "path_output")
 
+Nx.default_backend(EXLA.Backend)
+
 model_id = "bert-base-cased"
 batch_size = 32
 sequence_length = 64
 lr = 5.0e-5
-
-Nx.default_backend(EXLA.Backend)
 
 {:ok, spec} =
   Bumblebee.load_spec({:hf, model_id},

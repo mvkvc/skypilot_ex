@@ -18,6 +18,8 @@ path_base = "data/archive"
 name1 = "completeSpamAssassin"
 name2 = "enronSpamSubset"
 name3 = "lingSpam"
+
+path_out = "data/combined"
 ```
 
 ```elixir
@@ -86,10 +88,35 @@ df_test = DF.slice(df, (test_rows + 1)..-1)
 ```
 
 ```elixir
-path_out = "data/combined"
-if File.exists?(path_out) do
-  File.mkdir!(path_out)
+# path_out = "data/combined"
+# if File.exists?(path_out) do
+#   File.mkdir!(path_out)
+# end
+```
+
+```elixir
+check = fn df ->
+  Enum.map(DF.names(df), fn x ->
+    IO.inspect(x, label: "name")
+    Series.nil_count(df[x]) |> IO.inspect(label: "nil")
+  end)
 end
+```
+
+```elixir
+check.(df_train)
+```
+
+```elixir
+check.(df_test)
+```
+
+```elixir
+df_test = DF.drop_nil(df_test)
+```
+
+```elixir
+check.(df_test)
 ```
 
 ```elixir

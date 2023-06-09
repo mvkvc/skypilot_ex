@@ -17,8 +17,16 @@ Nx.default_backend(EXLA.Backend)
 ```
 
 ```elixir
+path_train = "./data/combined/train.csv"
+path_test = "./data/combined/test.csv"
+path_output = "./model"
+```
+
+```elixir
 model_id = "bert-base-cased"
-# model_id = "distilbert-base-cased"
+batch_size = 32
+sequence_length = 64
+lr = 5.0e-5
 ```
 
 ```elixir
@@ -26,6 +34,8 @@ model_id = "bert-base-cased"
   Bumblebee.load_spec({:hf, model_id},
     architecture: :for_sequence_classification
   )
+
+spec = Bumblebee.configure(spec, num_labels: 2)
 ```
 
 ```elixir
@@ -56,31 +66,34 @@ defmodule Spam do
     stream
     |> Stream.chunk_every(batch_size)
     |> Stream.map(fn batch ->
-      {text, labels} = Enum.unzip(batch)
-      labels = Nx.stack(labels)
-      {labels_size} = Nx.shape(labels)
-      labels_resized = if labels_size == batch_size, do: batch_size, else: labels_size
-      labels = Nx.reshape(labels, {labels_resized, 1})
-      tokenized = Bumblebee.apply_tokenizer(tokenizer, text, length: sequence_length)
-      {tokenized, labels}
+      try do
+        {text, labels} = Enum.unzip(batch)
+        IO.inspect(batch, label: "batch")
+        IO.inspect(text, label: "text")
+        IO.inspect(labels, label: "labels")
+
+        tokenized = Bumblebee.apply_tokenizer(tokenizer, text, length: sequence_length)
+        {tokenized, Nx.stack(labels)}
+      rescue
+        e in RuntimeError ->
+          IO.puts("An error occurred: #{Exception.message(e)}")
+          IO.puts("Failed input: #{batch}")
+          {:error, batch}
+      end
     end)
   end
 end
 ```
 
 ```elixir
-batch_size = 8
-sequence_length = 64
-path_data = "./data/combined/"
-
 train_data =
-  Spam.load(path_data <> "train.csv", tokenizer,
+  Spam.load(path_train, tokenizer,
     batch_size: batch_size,
     sequence_length: sequence_length
   )
 
 test_data =
-  Spam.load(path_data <> "test.csv", tokenizer,
+  Spam.load(path_test, tokenizer,
     batch_size: batch_size,
     sequence_length: sequence_length
   )
@@ -111,28 +124,25 @@ Axon.get_output_shape(logits_model, input)
 ```
 
 ```elixir
-logits_model =
-  logits_model
-  |> Axon.nx(&Nx.argmax(&1, axis: 1))
-  |> Axon.nx(&Nx.reshape(&1, {batch_size, 1}))
-```
+loss =
+  &Axon.Losses.categorical_cross_entropy(&1, &2, reduction: :mean, from_logits: true, sparse: true)
 
-```elixir
-[{input, _}] = Enum.take(train_data, 1)
-Axon.get_output_shape(logits_model, input)
-```
-
-```elixir
-lr = 5.0e-5
-
-loss = &Axon.Losses.binary_cross_entropy(&1, &2, reduction: :mean)
 optimizer = Axon.Optimizers.adam(lr)
 loop = Axon.Loop.trainer(logits_model, loss, optimizer, log: 1)
 ```
 
 ```elixir
-accuracy = &Axon.Metrics.accuracy(&1, &2)
+accuracy = &Axon.Metrics.accuracy(&1, &2, from_logits: true, sparse: true)
 loop = Axon.Loop.metric(loop, accuracy, "accuracy")
+```
+
+```elixir
+Enum.take(test_data, 4)
+```
+
+```elixir
+train_data = Enum.take(train_data, 10)
+test_data = Enum.take(test_data, 10)
 ```
 
 ```elixir
@@ -140,30 +150,18 @@ trained_model_state =
   logits_model
   |> Axon.Loop.trainer(loss, optimizer, log: 1)
   |> Axon.Loop.metric(accuracy, "accuracy")
-  |> Axon.Loop.run(train_data, params, epochs: 3, compiler: EXLA, strict?: false)
+  |> Axon.Loop.run(train_data, params, epochs: 1, compiler: EXLA, strict?: false)
 ```
 
 ```elixir
-# logits_model
-# |> Axon.Loop.evaluator()
-# |> Axon.Loop.metric(accuracy, "accuracy")
-# |> Axon.Loop.run(test_data, trained_model_state, compiler: EXLA)
+logits_model
+|> Axon.Loop.evaluator()
+|> Axon.Loop.metric(accuracy, "accuracy")
+|> Axon.Loop.run(test_data, trained_model_state, compiler: EXLA)
 ```
 
 ```elixir
-# x = Nx.tensor([0, 1, 2, 3])
-# out = Nx.serialize(x)
-
-# IO.binwrite()
-# File.write!("test", out)
-```
-
-```elixir
-# {:ok, file} = File.open("greeting.txt", [:append])
-
-# # Write iodata to the file
-# :ok = IO.binwrite(file, iodata)
-
-# # Close the file
-# :ok = File.close(file)
+# %{model: model, params: params} = trained_model_state
+# params_ser = Nx.serialize(params)
+# File.write!(path_output, params_ser)
 ```

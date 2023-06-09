@@ -1,6 +1,6 @@
 name: spam
 
-workdir: ./01_spam
+workdir: .
 
 resources:
   cloud: gcp
@@ -13,7 +13,7 @@ resources:
 file_mounts:
   /inputs:
     name: mvkvc-sky-spam-data
-    source: ./01_spam/data/combined
+    source: ./data/combined
     store: gcs
     persistent: True
     mode: COPY

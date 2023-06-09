@@ -1,0 +1,20 @@
+name: livebook
+
+workdir: .
+
+resources:
+  cloud: gcp
+  region: us-east4
+  zone: us-east4-c
+  instance_type: n1-standard-8
+  disk_size: 100
+  accelerators: T4:1
+
+setup: |
+  docker pull mkvc/skypilot_ex:base
+
+run: |
+  docker run --rm \
+  --gpus all \
+  mvkvc/skypilot_ex:base \
+  livebook server
