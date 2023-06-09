@@ -1,5 +1,7 @@
 name: spam
 
+workdir: .
+
 resources:
   cloud: gcp
   region: us-east4
@@ -9,23 +11,27 @@ resources:
   accelerators: T4:1
 
 file_mounts:
-  /spam: .
-  /inputs: ./data/combined
-  /outputs:
+  /sky/train.exs: ./01_spam/train.exs
+  /sky/inputs: ./01_spam/data/combined
+  /sky/outputs:
     name: mvkvc-sky-spam-model
     store: gcs
     persistent: True
     mode: MOUNT
 
 setup: |
-  docker build -t mvkvc/skypilot_ex:v0 /spam
+  docker build -t mvkvc/skypilot_ex:v0 .
 
 run: |
+  pwd
+  ls -la
+  ls -la /sky
+  ls -la /sky/inputs
+  ls -la /sky/outputs
   docker run --rm \
     --gpus all \
-    --volume="/inputs:/inputs:ro" \
-    --volume="/outputs:/outputs:rw" \
-    mvkvc/skypilot_ex:v0 \
-    --train /inputs/train.csv \
-    --test /inputs/test.csv \
-    --output /outputs/model
+    --volume="/sky:/sky:rw" \
+    mvkvc/skypilot_ex:v0 /sky/train.exs \
+    --train /sky/inputs/train.csv \
+    --test /sky/inputs/test.csv \
+    --output /sky/outputs/model
