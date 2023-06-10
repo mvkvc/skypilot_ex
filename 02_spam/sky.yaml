@@ -15,7 +15,7 @@ file_mounts:
     name: mvkvc-sky-spam-data
     source: ./data/combined
     store: gcs
-    persistent: True
+    persistent: False
     mode: COPY
   /outputs:
     name: mvkvc-sky-spam-model

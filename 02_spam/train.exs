@@ -6,6 +6,9 @@ Mix.install([
   {:bumblebee, "~> 0.3.0"}
 ])
 
+alias Explorer.DataFrame, as: DF
+alias Explorer.Series
+
 args = System.argv()
 
 {options, _, _} =
@@ -38,9 +41,16 @@ spec = Bumblebee.configure(spec, num_labels: 2)
 
 defmodule Spam do
   def load(path, tokenizer, opts \\ []) do
-    path
-    |> Explorer.DataFrame.from_csv!(header: true)
-    |> Explorer.DataFrame.rename(["text", "label"])
+    df =
+      path
+      |> DF.from_csv!(header: true)
+      |> DF.rename(["text", "label"])
+
+    len = DF.n_rows(df)
+    len = len - rem(len, opts[:batch_size])
+    df = DF.slice(df, 0..(len - 1))
+
+    df
     |> stream()
     |> tokenize_and_batch(tokenizer, opts[:batch_size], opts[:sequence_length])
   end
@@ -50,8 +60,8 @@ defmodule Spam do
     ys = df["label"]
 
     xs
-    |> Explorer.Series.to_enum()
-    |> Stream.zip(Explorer.Series.to_enum(ys))
+    |> Series.to_enum()
+    |> Stream.zip(Series.to_enum(ys))
   end
 
   def tokenize_and_batch(stream, tokenizer, batch_size, sequence_length) do
@@ -59,12 +69,7 @@ defmodule Spam do
     |> Stream.chunk_every(batch_size)
     |> Stream.map(fn batch ->
       {text, labels} = Enum.unzip(batch)
-      # labels = Nx.stack(labels)
-      # {labels_size} = Nx.shape(labels)
-      # labels_resized = if labels_size == batch_size, do: batch_size, else: labels_size
-      # labels = Nx.reshape(labels, {labels_resized, 1})
       tokenized = Bumblebee.apply_tokenizer(tokenizer, text, length: sequence_length)
-      # {tokenized, labels}
       {tokenized, Nx.stack(labels)}
     end)
   end
@@ -82,27 +87,10 @@ test_data =
     sequence_length: sequence_length
   )
 
-IO.inspect(Enum.take(train_data, 1))
-
 %{model: model, params: params} = model
 
-IO.inspect(model, label: "model")
+logits_model = Axon.nx(model, & &1.logits)
 
-[{input, _}] = Enum.take(train_data, 1)
-Axon.get_output_shape(model, input) |> IO.inspect(label: "output_shape")
-
-logits_model =
-  model
-  |> Axon.nx(& &1.logits)
-
-# |> Axon.nx(&Nx.argmax(&1, axis: 1))
-# |> Axon.nx(&Nx.reshape(&1, {batch_size, 1}))
-# |> Axon.nx(fn x ->
-#   {size} = Nx.shape(x)
-#   Nx.reshape(x, {size, 1})
-# end)
-
-# loss = &Axon.Losses.binary_cross_entropy(&1, &2, reduction: :mean, from_logits: true)
 loss =
   &Axon.Losses.categorical_cross_entropy(&1, &2, reduction: :mean, from_logits: true, sparse: true)
 
@@ -112,8 +100,7 @@ loop = Axon.Loop.trainer(logits_model, loss, optimizer, log: 1)
 accuracy = &Axon.Metrics.accuracy(&1, &2, from_logits: true, sparse: true)
 loop = Axon.Loop.metric(loop, accuracy, "accuracy")
 
-train_data = Enum.take(train_data, 300)
-test_data = Enum.take(test_data, 100)
+IO.puts("\nTraining...")
 
 trained_model_state =
   logits_model
@@ -121,11 +108,14 @@ trained_model_state =
   |> Axon.Loop.metric(accuracy, "accuracy")
   |> Axon.Loop.run(train_data, params, epochs: 3, compiler: EXLA, strict?: false)
 
+IO.puts("\nTesting...")
+
 logits_model
 |> Axon.Loop.evaluator()
 |> Axon.Loop.metric(accuracy, "accuracy")
 |> Axon.Loop.run(test_data, trained_model_state, compiler: EXLA)
 
-%{model: model, params: params} = trained_model_state
-params_ser = Nx.serialize(params)
+IO.puts("\nSaving...")
+
+params_ser = Nx.serialize(trained_model_state)
 File.write!(path_output, params_ser)
