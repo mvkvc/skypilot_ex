@@ -1,6 +1,6 @@
 # skypilot_ex
 
-Examples using [SkyPilot](https://github.com/skypilot-org/skypilot) to run machine learning jobs in Elixir at the lowest cost across cloud providers.
+Examples using [SkyPilot](https://github.com/skypilot-org/skypilot) to easily run machine learning jobs in Elixir at the lowest cost across cloud providers.
 
 - `./00_build/`: Remotely build the base Docker image with CUDA and Elixir.
 - `./01_livebook/`: Run a Livebook server with mounted cloud storage.
