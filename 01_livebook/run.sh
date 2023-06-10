@@ -1,7 +1,6 @@
 #! /bin/bash
 
-sky launch -c lbclust ./sky.yaml
-# sky exec lbclust ./sky.yaml
+sky launch -y -c lbclust ./sky.yaml --down
 
-# Run this command to connect to the livebook
-# ssh -L 8080:localhost:8080 lbclust
+# Connect to the livebook
+# ssh -L 8787:localhost:8787 lbclust

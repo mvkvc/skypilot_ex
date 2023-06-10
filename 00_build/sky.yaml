@@ -10,10 +10,7 @@ resources:
   disk_size: 100
   accelerators: T4:1
 
-setup: |
-  echo $DOCKER_TOKEN | docker login --username mvkvc --password-stdin
-  docker build -t $DOCKER_USER/skypilot_ex:base .
-  docker push $DOCKER_USER/skypilot_ex:base
-
 run: |
-  docker images
+  echo $DOCKER_TOKEN | docker login --username mvkvc --password-stdin
+  docker build -t mvkvc/skypilot_ex:base .
+  docker push mvkvc/skypilot_ex:base

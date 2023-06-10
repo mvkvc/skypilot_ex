@@ -4,4 +4,4 @@ set +a
 source .env
 set -a
 
-sky launch -c buildclust ./sky.yaml --down --env DOCKER_TOKEN=$DOCKER_TOKEN
+sky launch -y -c buildclust ./sky.yaml --env DOCKER_TOKEN=$DOCKER_TOKEN --down

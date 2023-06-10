@@ -1,4 +1,3 @@
 #! /bin/bash
 
-sky launch -c aiimagesclust ./sky.yaml
-# sky exec aiimagesclust ./sky.yaml
+sky launch -y -c aiimagesclust ./sky.yaml --down

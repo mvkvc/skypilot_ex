@@ -10,11 +10,23 @@ resources:
   disk_size: 100
   accelerators: T4:1
 
+file_mounts:
+  /inputs:
+    name: mvkvc-sky-kaggle-blueberry-data
+    source: ./data/playground-series-s3e14
+    store: gcs
+    persistent: False
+    mode: COPY
+
 setup: |
-  docker pull mkvc/skypilot_ex:base
+  docker pull mvkvc/skypilot_ex:base
 
 run: |
   docker run --rm \
   --gpus all \
+  --volume="/inputs:/inputs:ro" \
+  --network host \
+  -e LIVEBOOK_PORT=8787 \
+  -e LIVEBOOK_SHUTDOWN_ENABLED=true \
   mvkvc/skypilot_ex:base \
-  livebook server
+  livebook server /nbs

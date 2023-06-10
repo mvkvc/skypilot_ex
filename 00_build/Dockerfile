@@ -35,12 +35,13 @@ RUN dpkg -i esl-erlang_"${VER_ERL}"~ubuntu~bionic_amd64.deb
 RUN rm esl-erlang_"${VER_ERL}"~ubuntu~bionic_amd64.deb
 
 RUN wget https://github.com/elixir-lang/elixir/releases/download/v"${VER_ELIX}"/elixir-otp-"${VER_ELIX_ERL}".zip
-RUN unzip elixir-otp-"${VER_ELIX_ERL}".zip -d /elixir
+RUN unzip elixir-otp-"${VER_ELIX_ERL}".zip -d /root/elixir
 RUN rm elixir-otp-"${VER_ELIX_ERL}".zip
-ENV PATH="$HOME/elixir/bin:${PATH}"
+ENV PATH="/root/elixir/bin:${PATH}"
 RUN elixir --version
 
 RUN mix local.hex --force
 RUN mix local.rebar --force
-RUN mix archive.install hex livebook 0.9.2 --force
+RUN mix escript.install hex livebook 0.9.2 --force
+ENV PATH="/root/.mix/escripts:${PATH}"
 RUN livebook --version
