@@ -7,7 +7,7 @@ resources:
   region: us-east4
   zone: us-east4-c
   instance_type: n1-highmem-8
-  disk_size: 256
+  # disk_size: 200
 
 file_mounts:
   /raw:
@@ -17,7 +17,7 @@ file_mounts:
     persistent: True
     mode: MOUNT
   /inputs:
-    name: mvkvc-sky-ai-images-data-unzipped
+    name: mvkvc-sky-ai-images-data-unz
     store: gcs
     persistent: True
     mode: MOUNT

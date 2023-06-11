@@ -4,9 +4,6 @@
 .venv
 .env
 
-/*/data/**/*
-!/*/data/.keep
-
 # The directory Mix will write compiled artifacts to.
 /_build/
 
