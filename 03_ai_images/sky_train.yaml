@@ -1,6 +1,6 @@
-name: ai_images
+name: ai_images_train
 
-workdir: ./02_ai_images
+workdir: .
 
 resources:
   cloud: gcp
@@ -12,8 +12,7 @@ resources:
 
 file_mounts:
   /inputs:
-    name: mvkvc-sky-ai-images-data
-    source: ./02_spam/data/combined
+    name: mvkvc-sky-ai-images-data-unzipped
     store: gcp
     persistent: True
     mode: MOUNT

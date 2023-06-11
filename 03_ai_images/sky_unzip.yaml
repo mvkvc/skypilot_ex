@@ -1,0 +1,26 @@
+name: ai_images_unzip
+
+workdir: .
+
+resources:
+  cloud: gcp
+  region: us-east4
+  zone: us-east4-c
+  instance_type: n1-highmem-8
+  disk_size: 256
+
+file_mounts:
+  /raw:
+    name: mvkvc-sky-ai-images-data-raw
+    source: ./data/raw
+    store: gcs
+    persistent: True
+    mode: MOUNT
+  /inputs:
+    name: mvkvc-sky-ai-images-data-unzipped
+    store: gcs
+    persistent: True
+    mode: MOUNT
+
+run: |
+  unzip -n /raw/artifact-dataset.zip -d /inputs
